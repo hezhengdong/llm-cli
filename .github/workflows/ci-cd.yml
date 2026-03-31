@@ -12,14 +12,20 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # 检出项目代码
       - name: Checkout code
         uses: actions/checkout@v4
-
+      # 设置 Go 环境
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21' # 请根据你的项目要求修改 Go 版本
+          go-version: 'stable' # 请根据项目要求修改 Go 版本
 
+      # 依赖检查
+      - name: Run go mod tidy
+        run: go mod tidy && git diff --exit-code go.mod go.sum
+
+      # 代码风格检查
       - name: Run go fmt
         # 如果存在未格式化的代码，会打印出来并以状态码 1 退出，从而阻断 CI
         run: |
@@ -28,18 +34,21 @@ jobs:
             exit 1
           fi
 
+      # 静态检查
       - name: Run go vet
         # 执行静态代码检查
         run: go vet ./...
 
-  # 任务 2：跨平台编译与发布 (只有打 Tag 才会执行)
-  release:
-    needs: check # 依赖 check 任务成功
+  # 任务 2：跨平台编译（只构建，不发布） (只有打 Tag 才会执行)
+  build:
+    needs: check
     if: startsWith(github.ref, 'refs/tags/v') # 仅在 Tag 推送时触发
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # 构建只需要 read
+    # 定义需要编译的系统和架构组合
     strategy:
       matrix:
-        # 定义需要编译的系统和架构组合
         include:
           - goos: linux
             goarch: amd64
@@ -60,9 +69,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: 'stable'
 
-      - name: Build executable
+      # 编译多平台可执行文件
+      - name: Build binaries
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -70,10 +80,56 @@ jobs:
         run: |
           go build -ldflags="-s -w" -o llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      # 上传编译产物至 GitHub Actions 临时存储
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          # 为不同平台/架构的编译产物设置唯一名称，避免冲突
+          name: llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 指定需要上传的编译生成的二进制文件路径
+          path: llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          # 未找到目标文件时终止任务，确保编译流程无异常
+          if-no-files-found: error
+
+  # 任务 3：创建 Release 并上传所有文件（只执行一次）
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 必须有 write 权限
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 下载所有平台的编译产物，用于发布
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # 指定产物下载的目标根目录
+          path: ./artifacts
+          # 合并所有矩阵构建生成的产物至同一目录，简化文件管理
+          merge-multiple: true   # 把所有 matrix 的 artifact 合并到一个文件夹
+
+      # 创建 Github Release 并上传文件
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2   # 改成 v2
+        with:
+          files: ./artifacts/**                  # 一次性上传所有二进制
+          generate_release_notes: true           # 自动生成 changelog（推荐）
+          draft: false
+          prerelease: false
+          # 可以加 body: ${{ steps.changelog.outputs.content }} 如果你有自定义 changelog
         env:
           # GitHub 会自动提供该 Token 权限
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# 编译和发布必须解耦，这是跨平台 CI/CD 的标准范式：
+# - 并行编译：用 matrix 同时编译所有平台，产物上传到 GitHub Actions 临时存储（artifacts）
+# - 串行发布：编译全部成功后，单任务下载所有产物，一次性创建 Release 并上传所有文件
+
+# 反面示例：
+# 因为 1. strategy.matrix 会为每个配置项创建独立的并行任务
+# 2. 每个并行任务都会去请求创建同一个 Release，只有一个能够成功
+# 所以如果 4 个并行任务同时请求创建同一个 Release，会产生竞争条件，导致只有一个能够成功
