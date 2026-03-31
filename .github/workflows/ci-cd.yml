@@ -63,7 +63,7 @@ jobs:
       - name: Build binaries
         run: |
           # 项目名称
-          APP_NAME="llm"
+          APP_NAME="llm-cli"
           # 编译 Linux amd64
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${APP_NAME}-linux-amd64
           # 编译 Mac amd64
@@ -82,5 +82,5 @@ jobs:
           generate_release_notes: true
           # 上传的文件：编译的二进制 + 安装脚本
           files: |
-            llm-*
+            llm-cli-*
             install.sh

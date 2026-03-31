@@ -12,7 +12,7 @@ import (
 	"github.com/openai/openai-go/v3"
 )
 
-type SearchTool struct{
+type SearchTool struct {
 	APIKey string
 }
 
@@ -50,7 +50,7 @@ type tavilySearchRequest struct {
 
 // tavilyResponse 用于解析 Tavily API 返回的 JSON 结果
 type tavilySearchResponse struct {
-	Results[]struct {
+	Results []struct {
 		Title   string `json:"title"`
 		URL     string `json:"url"`
 		Content string `json:"content"`
@@ -87,12 +87,12 @@ func (t *SearchTool) Execute(args map[string]any) (string, error) {
 	}
 
 	// 5. 设置必要的请求头
-	req.Header.Add("Authorization", "Bearer " + t.APIKey)
+	req.Header.Add("Authorization", "Bearer "+t.APIKey)
 	req.Header.Add("Content-Type", "application/json")
 
 	// 6. 发送请求
 	client := &http.Client{
-    	Timeout: 20 * time.Second, // 防止长时间阻塞
+		Timeout: 20 * time.Second, // 防止长时间阻塞
 	}
 	resp, err := client.Do(req)
 	if err != nil {

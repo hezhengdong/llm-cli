@@ -18,7 +18,7 @@ func (t *ShellTool) Name() string {
 
 func (t *ShellTool) Definition() openai.ChatCompletionToolUnionParam {
 	return openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
-		Name: t.Name(),
+		Name:        t.Name(),
 		Description: openai.String("Execute a shell command on the host machine. USE WITH CAUTION."),
 		Parameters: openai.FunctionParameters{
 			"type": "object",

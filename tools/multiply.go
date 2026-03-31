@@ -14,7 +14,7 @@ func (t *MultiplyTool) Name() string {
 
 func (t *MultiplyTool) Definition() openai.ChatCompletionToolUnionParam {
 	return openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
-		Name: t.Name(),
+		Name:        t.Name(),
 		Description: openai.String("Multiply two numbers together"),
 		Parameters: openai.FunctionParameters{
 			"type": "object",

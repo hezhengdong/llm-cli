@@ -12,8 +12,8 @@ import (
 )
 
 type ChatBot struct {
-	client *openai.Client
-	model string
+	client   *openai.Client
+	model    string
 	messages []openai.ChatCompletionMessageParamUnion
 	tools    map[string]tools.Tool
 }
@@ -44,11 +44,11 @@ func (b *ChatBot) RegisterTool(tool tools.Tool) {
 }
 
 func (b *ChatBot) getToolDefinitions() []openai.ChatCompletionToolUnionParam {
-    var tools []openai.ChatCompletionToolUnionParam
-    for _, t := range b.tools {
-        tools = append(tools, t.Definition()) // 工具定义，这个倒是简单好理解
-    }
-    return tools
+	var tools []openai.ChatCompletionToolUnionParam
+	for _, t := range b.tools {
+		tools = append(tools, t.Definition()) // 工具定义，这个倒是简单好理解
+	}
+	return tools
 }
 
 func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessageParamUnion, []openai.ChatCompletionMessageToolCallUnion) {

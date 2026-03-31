@@ -7,11 +7,10 @@ import (
 	"os"
 )
 
-
 func main() {
 
 	// 加载配置
-	cfg := loadConfig("config.yaml")
+	cfg := loadConfig("~/.config/llm-cli/config.yaml")
 
 	// 获取输入
 	input, err := readInput()
