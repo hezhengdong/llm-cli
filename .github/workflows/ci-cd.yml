@@ -14,10 +14,10 @@ jobs:
     steps:
       # 检出项目代码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       # 设置 Go 环境
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 'stable' # 请根据项目要求修改 Go 版本
 
@@ -69,10 +69,10 @@ jobs:
             ext: ".exe"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 'stable'
 
@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 下载所有平台的编译产物，用于发布
       - name: Download all artifacts
