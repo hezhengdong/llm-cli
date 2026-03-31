@@ -84,31 +84,18 @@ fi
 # 6. 配置文件初始化
 echo ">>> 正在检查配置文件状态..."
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo ">>> 未发现配置文件，正在创建默认配置: ${CONFIG_FILE}"
+    echo ">>> 未发现配置文件，正在从 GitHub 获取默认配置: ${CONFIG_FILE}"
     mkdir -p "$CONFIG_DIR"
-    # 使用 cat 写入默认 YAML 内容
-    cat << 'EOF' > "$CONFIG_FILE"
-default_provider: moonshot
-default_prompt: default
-
-providers:
-  moonshot:
-    api_key: ${API-KEY}
-    base_url: https://api.moonshot.cn/v1
-    model: kimi-k2-turbo-preview
-  openrouter:
-    api_key: ${API-KEY}
-    base_url: https://openrouter.ai/api/v1
-    model: openrouter/free
-
-tools:
-  tavily:
-    api_key: ${API-KEY}
-
-prompts:
-  default: "你是AI助手, 回复精炼, 一针见血, 200字以内"
-EOF
-    echo ">>> 默认配置已生成，请稍后手动修改 API-KEY。"
+    
+    # 从 GitHub 仓库的 main 分支获取 config.yaml
+    CONFIG_URL="https://raw.githubusercontent.com/hezhengdong/llm-cli/main/config.yaml"
+    curl -sL -o "$CONFIG_FILE" "$CONFIG_URL"
+    
+    if [ $? -eq 0 ]; then
+        echo ">>> 默认配置已生成，请稍后手动修改 API-KEY。"
+    else
+        echo "[警告] 无法从 GitHub 下载默认配置文件，请检查网络连接或手动创建配置。"
+    fi
 else
     echo ">>> 配置文件已存在，跳过初始化，保护用户数据。"
 fi

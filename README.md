@@ -46,7 +46,7 @@ curl -sL https://raw.githubusercontent.com/hezhengdong/llm-cli/main/scripts/inst
 
 ### 配置 API Key
 
-安装成功后，脚本会自动检查并创建配置文件目录：`~/.config/llm-cli/config.yaml`。若该文件已存在，则**不会进行任何覆盖操作**，确保您的数据安全。
+安装成功后，脚本会自动检查并创建配置文件目录：`~/.config/llm-cli/config.yaml`，配置文件初始内容如[仓库对应文件](https://github.com/hezhengdong/llm-cli/blob/main/config.yaml)所示。若该文件已存在，则**不会进行任何覆盖操作**，确保您的数据安全。
 
 初次安装后，请打开该文件，并填入您真实的 `API-KEY`。
 
