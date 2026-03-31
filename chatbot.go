@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"llm-cli/tools"
+	"llm-cli/utils"
 	"strings"
 
 	"github.com/openai/openai-go/v3"
@@ -67,7 +68,6 @@ func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessagePara
 	acc := openai.ChatCompletionAccumulator{}
 	var replyBuilder strings.Builder
 
-	fmt.Print("[🤖 LLM 回复] ")
 	for stream.Next() {
 		chunk := stream.Current()
 		acc.AddChunk(chunk)
@@ -80,7 +80,7 @@ func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessagePara
 	}
 
 	if replyBuilder.Len() > 0 {
-		fmt.Printf("\n\n")
+		fmt.Printf("\n")
 	}
 
 	if err := stream.Err(); err != nil {
@@ -114,7 +114,7 @@ func (b *ChatBot) toolNode(toolCalls []openai.ChatCompletionMessageToolCallUnion
 			continue
 		}
 
-		fmt.Printf("[🛠️ LLM 正在调用 %s 工具] {toolName: %s, argsJSON: %s}\n\n", toolName, toolName, argsJSON)
+		utils.GrayPrintf("[调用 %s 工具] {toolName: %s, argsJSON: %s}\n", toolName, toolName, argsJSON)
 
 		// 根据参数执行 Execute 函数
 		result, err := tool.Execute(args)
@@ -123,7 +123,7 @@ func (b *ChatBot) toolNode(toolCalls []openai.ChatCompletionMessageToolCallUnion
 			result = fmt.Sprintf("Execution error: %v", err)
 		}
 
-		fmt.Printf("\n[🛠️ 工具执行完毕] \n%s\n\n", result)
+		// utils.GrayPrintf("[工具执行完毕]\n")
 		toolMessages = append(toolMessages, openai.ToolMessage(result, tc.ID))
 	}
 

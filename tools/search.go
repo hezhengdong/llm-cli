@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"llm-cli/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -119,11 +120,14 @@ func (t *SearchTool) Execute(args map[string]any) (string, error) {
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("以下是关于 [%s] 的最新搜索结果：\n\n", query))
+	utils.GrayPrintf("[参考资料]\n")
 	for i, item := range apiRes.Results {
 		sb.WriteString(fmt.Sprintf("结果 %d:\n", i+1))
 		sb.WriteString(fmt.Sprintf("- 标题: %s\n", item.Title))
 		sb.WriteString(fmt.Sprintf("- 链接: %s\n", item.URL))
 		sb.WriteString(fmt.Sprintf("- 内容: %s\n\n", item.Content))
+		utils.GrayPrintf("%v.标题: %v\n", i+1, item.Title)
+		utils.GrayPrintf("  链接: %v\n", item.URL)
 	}
 
 	// 10. 返回组装好的文本给 LLM

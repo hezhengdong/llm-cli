@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"llm-cli/tools"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func main() {
@@ -70,8 +72,14 @@ func readInput() (string, error) {
 		argInput = os.Args[1]
 	}
 
-	// 3. 组合输入内容
-	finalInput := pipeInput + argInput
+	// 3. 生成当前时间提示语
+	currentTime := time.Now()
+	// 格式化时间为：年-月-日 时:分:秒
+	timeFormat := currentTime.Format("2006-01-02 15:04:05")
+	timeTip := fmt.Sprintf("当前时间为 % s，你的预训练数据存在时效性过期风险，若用户咨询时效性较强的问题，需依据该最新时间进行回复。", timeFormat)
+
+	// 4. 组合输入内容
+	finalInput := timeTip + "\n" + pipeInput + "\n" + argInput
 
 	return finalInput, nil
 }

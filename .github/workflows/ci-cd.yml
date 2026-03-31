@@ -47,6 +47,11 @@ jobs:
     permissions:
       contents: read  # 构建只需要 read
     # 定义需要编译的系统和架构组合
+    # 如果是命令行方式，如下所示：
+    # CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${APP_NAME}-linux-amd64
+    # CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ${APP_NAME}-darwin-amd64
+    # CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o ${APP_NAME}-darwin-arm64
+    # CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o ${APP_NAME}-windows-amd64.exe
     strategy:
       matrix:
         include:

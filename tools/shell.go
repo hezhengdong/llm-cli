@@ -3,6 +3,7 @@ package tools
 import (
 	"bufio"
 	"fmt"
+	"llm-cli/utils"
 	"os"
 	"os/exec"
 	"strings"
@@ -40,8 +41,7 @@ func (t *ShellTool) Execute(args map[string]any) (string, error) {
 	}
 
 	// 询问人类确认
-	fmt.Printf("[⚠️ 警告] AI 请求执行命令: `%s`\n\n", command)
-	fmt.Print("[👤 人工确认] 是否允许执行？(y/N): ")
+	utils.GrayPrintf("[请求执行命令 `%s`] 是否允许执行？(y/N): ", command)
 
 	// 直接从终端读取用户输入，避开管道输入
 	reader := bufio.NewReader(os.Stdin)
@@ -56,6 +56,9 @@ func (t *ShellTool) Execute(args map[string]any) (string, error) {
 	// 执行命令
 	cmd := exec.Command("bash", "-c", command)
 	out, err := cmd.CombinedOutput()
+
+	utils.GrayPrintf("%s", string(out))
+
 	if err != nil {
 		return fmt.Sprintf("Execution failed: %v\nOutput: %s", err, string(out)), nil
 	}

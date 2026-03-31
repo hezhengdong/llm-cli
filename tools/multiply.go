@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"llm-cli/utils"
 
 	"github.com/openai/openai-go/v3"
 )
@@ -33,5 +34,7 @@ func (t *MultiplyTool) Execute(args map[string]any) (string, error) {
 	if !ok1 || !ok2 {
 		return "", fmt.Errorf("invalid arguments")
 	}
-	return fmt.Sprintf("%f", a*b), nil
+	result := fmt.Sprintf("%f", a*b)
+	utils.GrayPrintf("[%v 执行结果] %v\n", t.Name(), result)
+	return result, nil
 }
