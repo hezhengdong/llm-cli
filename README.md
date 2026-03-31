@@ -111,3 +111,4 @@ git tag v0.0.0
 git push origin v0.0.0
 ```
 
+修改代码后，需运行 `go fmt ./...` 格式化工具。

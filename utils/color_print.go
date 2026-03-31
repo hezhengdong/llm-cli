@@ -4,6 +4,7 @@ import "fmt"
 
 // 固定灰色 ANSI 码（你要的唯一灰色）
 const grayColor = "\033[90m"
+
 // 重置颜色码
 const resetColor = "\033[0m"
 
