@@ -1,15 +1,15 @@
-name: CI/CD Pipeline
+name: llm-cli CI/CD
 
 on:
   push:
-    branches: [ "main" ]
-    tags: [ "v*" ] # 监听 v 开头的 tag，例如 v1.0.0
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - '**' # 拦截所有分支的 push，执行检查
+    tags:
+      - 'v*' # 只有打 v 开头的 tag（如 v1.0.0）才会触发 Release 发布
 
 jobs:
+  # 任务 1：静态检查与风格检查 (每次 Push 都会执行)
   check:
-    name: Lint and Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -18,39 +18,41 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21' # 请替换为你实际使用的 Go 版本
+          go-version: '1.21' # 请根据你的项目要求修改 Go 版本
 
-      - name: Check formatting (go fmt)
-        # 如果存在未格式化的文件，命令会输出文件名并以非 0 状态退出，从而拦截 CI
-        run: if [ -n "$(gofmt -l .)" ]; then echo "存在未格式化的代码，请在本地运行 go fmt ./..."; exit 1; fi
+      - name: Run go fmt
+        # 如果存在未格式化的代码，会打印出来并以状态码 1 退出，从而阻断 CI
+        run: |
+          if [ -n "$(go fmt ./...)" ]; then
+            echo "代码风格检查不通过，请在本地运行 'go fmt ./...' 后重新提交"
+            exit 1
+          fi
 
       - name: Run go vet
+        # 执行静态代码检查
         run: go vet ./...
 
-      - name: Test Build
-        run: go build -v ./...
-
+  # 任务 2：跨平台编译与发布 (只有打 Tag 才会执行)
   release:
-    name: Build and Release
-    needs: check
-    if: startsWith(github.ref, 'refs/tags/v') # 仅在 tag 推送时执行
+    needs: check # 依赖 check 任务成功
+    if: startsWith(github.ref, 'refs/tags/v') # 仅在 Tag 推送时触发
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # 定义需要编译的系统和架构组合
         include:
-          - os: linux
-            arch: amd64
-            name: llm-cli-linux-amd64
-          - os: darwin
-            arch: amd64
-            name: llm-cli-darwin-amd64
-          - os: darwin
-            arch: arm64
-            name: llm-cli-darwin-arm64
-          - os: windows
-            arch: amd64
-            name: llm-cli-windows-amd64.exe
-
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: arm64
+            ext: ""
+          - goos: windows
+            goarch: amd64
+            ext: ".exe"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -60,16 +62,18 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Build
+      - name: Build executable
         env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
-        run: go build -o build/${{ matrix.name }} .
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0 # 禁用 CGO 以保证跨平台二进制文件的绝对静态兼容
+        run: |
+          go build -ldflags="-s -w" -o llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
 
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/${{ matrix.name }}
-          generate_release_notes: true
+          files: llm-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
         env:
+          # GitHub 会自动提供该 Token 权限
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
