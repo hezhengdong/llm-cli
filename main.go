@@ -5,12 +5,22 @@ import (
 	"io"
 	"llm-cli/tools"
 	"os"
+	"path/filepath"
 )
 
 func main() {
 
 	// 加载配置
-	cfg := loadConfig("~/.config/llm-cli/config.yaml")
+	// 1. 获取系统用户主目录（跨平台支持：Windows/macOS/Linux）
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic("获取用户主目录失败：" + err.Error())
+	}
+
+	// 2. 拼接完整配置文件路径（推荐用 filepath.Join，自动适配系统分隔符）
+	configPath := filepath.Join(homeDir, ".config", "llm-cli", "config.yaml")
+
+	cfg := loadConfig(configPath)
 
 	// 获取输入
 	input, err := readInput()
