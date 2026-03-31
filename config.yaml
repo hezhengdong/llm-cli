@@ -1,0 +1,25 @@
+default_provider: moonshot
+default_prompt: default
+
+providers:
+  siliconflow:
+    api_key: ${API-KEY}
+    base_url: https://api.siliconflow.cn/v1
+    model: deepseek-ai/DeepSeek-V3.2
+  moonshot:
+    api_key: ${API-KEY}
+    base_url: https://api.moonshot.cn/v1
+    model: kimi-k2-turbo-preview
+  openrouter:
+    api_key: ${API-KEY}
+    base_url: https://openrouter.ai/api/v1
+    model: openrouter/free
+
+tools:
+  tavily:
+    api_key: ${API-KEY}
+
+prompts:
+  default: "你是AI助手, 回复精炼, 一针见血, 200字以内, 解答问题时喜欢思考底层逻辑"
+  translator: "你是一个翻译官，请将接下来的所有输入翻译为英文"
+  zsher: "你是 macos zsh 操作员，请将根据提示词输出可执行的终端命令，不要生成多余的内容"
