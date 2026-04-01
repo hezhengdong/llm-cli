@@ -29,7 +29,7 @@
 - [x] 添加工具调用，乘法工具、搜索工具、终端执行工具
 - [x] Github Actions 实现 CICD
 - [x] 打印推理内容
-- [ ] 推理过程中调用工具（openai-go SDK 兼容性太差了！）
+- [ ] 推理过程中调用工具（openai-go SDK 兼容性太差了！[思路](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode)这里讲的很清楚。）
 - [ ] SQLite 持久化（感觉没有必要，终端问答一般随用随走）
 - [ ] Python 解释器、MCP、Skills（不是很想手搓了）
 
