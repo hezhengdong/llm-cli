@@ -17,6 +17,10 @@
 - [Language models on the command-line](https://simonwillison.net/2024/Jun/17/cli-language-models/)
 - [openai-go SDK 的四个 Chat Completions API 示例](https://github.com/openai/openai-go/tree/main/examples)
 
+遇到的坑
+
+- 当时没选择 python，是因为自己不怎么熟悉。目前来看，未选择生态成熟的 python 是我最大的错误！有受虐倾向的初学者才会用 Go！openai-go SDK 兼容性太差了，想要打印模型推理过程，还得自己去看源码，看看怎么解析 reasoning_content。想要让推理过程能够调用工具，得把手动推理内容加到响应结构体的 content 中，需要绕一大圈才能加进去！真是自讨苦吃！这个项目做到现在就此为止！真是浪费时间！耽搁正事！
+
 ## 功能
 
 - [x] 跑通最基本的流式输出。
@@ -24,6 +28,8 @@
 - [x] 接收管道与命令行输入。
 - [x] 添加工具调用，乘法工具、搜索工具、终端执行工具
 - [x] Github Actions 实现 CICD
+- [x] 打印推理内容
+- [ ] 推理过程中调用工具（openai-go SDK 兼容性太差了！）
 - [ ] SQLite 持久化（感觉没有必要，终端问答一般随用随走）
 - [ ] Python 解释器、MCP、Skills（不是很想手搓了）
 
@@ -84,6 +90,8 @@ curl -sL https://raw.githubusercontent.com/hezhengdong/llm-cli/main/scripts/unin
 ```bash
 # 流式输出
 llm 你好
+# 推理模式（如果需要工具调用，请关闭推理模式，尚未集成，否则会报错）
+llm -r 你好
 # 接收管道输入
 man ls | llm "这个命令是什么意思？"
 # 乘法工具

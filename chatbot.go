@@ -17,6 +17,7 @@ type ChatBot struct {
 	model    string
 	messages []openai.ChatCompletionMessageParamUnion
 	tools    map[string]tools.Tool
+	reasoningEnabled bool
 }
 
 func NewChatBot(apiKey, baseUrl, model, systemPrompt string) *ChatBot {
@@ -64,22 +65,56 @@ func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessagePara
 		params.Tools = tools
 	}
 
-	stream := b.client.Chat.Completions.NewStreaming(ctx, params)
+	// 通过 RequestOption 自定义传入不存在于标准结构体中的 Body 参数 (即 Python 里的 extra_body)
+	// OpenAI 似乎很推荐推理模型使用 Responses API，主流做法是使用额外参数控制
+	var opts []option.RequestOption
+	if b.reasoningEnabled {
+		opts = append(opts, option.WithJSONSet("thinking", map[string]string{"type": "enabled"}))
+	} else {
+		opts = append(opts, option.WithJSONSet("thinking", map[string]string{"type": "disabled"}))
+	}
+
+	stream := b.client.Chat.Completions.NewStreaming(ctx, params, opts...)
 	acc := openai.ChatCompletionAccumulator{}
-	var replyBuilder strings.Builder
+
+	var reasoningBuilder strings.Builder
+	var contentBuilder strings.Builder
+	var hasReasoningOutput bool // 为了在推理和正常回复间打印一个换行符
 
 	for stream.Next() {
 		chunk := stream.Current()
 		acc.AddChunk(chunk)
 
-		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
-			content := chunk.Choices[0].Delta.Content
+		if len(chunk.Choices) == 0 {
+			continue
+		}
+
+		delta := chunk.Choices[0].Delta
+
+		var reasoningContent string
+		if field, ok := delta.JSON.ExtraFields["reasoning_content"]; ok {
+			reasoningContent = strings.Trim(field.Raw(), "\"")
+		} else if field, ok := delta.JSON.ExtraFields["reasoning"]; ok {
+			reasoningContent = strings.Trim(field.Raw(), "\"")
+		}
+		if reasoningContent != "" {
+		    utils.GrayPrintf("%s", reasoningContent)
+		    reasoningBuilder.WriteString(reasoningContent)
+			hasReasoningOutput = true
+		}
+
+		if delta.Content != "" {
+			if hasReasoningOutput {
+        	    fmt.Printf("\n")
+           		hasReasoningOutput = false
+        	}
+			content := delta.Content
 			fmt.Print(content)
-			replyBuilder.WriteString(content)
+			contentBuilder.WriteString(content)
 		}
 	}
 
-	if replyBuilder.Len() > 0 {
+	if reasoningBuilder.Len() > 0 || contentBuilder.Len() > 0 {
 		fmt.Printf("\n")
 	}
 
@@ -87,7 +122,8 @@ func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessagePara
 		panic(err.Error())
 	}
 
-	return acc.Choices[0].Message.ToParam(), acc.Choices[0].Message.ToolCalls
+	msg := acc.Choices[0].Message
+	return msg.ToParam(), msg.ToolCalls
 }
 
 func (b *ChatBot) toolNode(toolCalls []openai.ChatCompletionMessageToolCallUnion) []openai.ChatCompletionMessageParamUnion {
