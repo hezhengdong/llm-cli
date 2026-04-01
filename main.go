@@ -55,7 +55,6 @@ func readInput() (string, bool, error) {
 	var pipeInput string
 	var argInput string
 
-
 	// 1. 定义开关：默认 false（关闭思考）
 	reasoning := flag.Bool("r", false, "enable reasoning mode")
 	flag.Parse()

@@ -13,10 +13,10 @@ import (
 )
 
 type ChatBot struct {
-	client   *openai.Client
-	model    string
-	messages []openai.ChatCompletionMessageParamUnion
-	tools    map[string]tools.Tool
+	client           *openai.Client
+	model            string
+	messages         []openai.ChatCompletionMessageParamUnion
+	tools            map[string]tools.Tool
 	reasoningEnabled bool
 }
 
@@ -98,16 +98,16 @@ func (b *ChatBot) llmNode(ctx context.Context) (openai.ChatCompletionMessagePara
 			reasoningContent = strings.Trim(field.Raw(), "\"")
 		}
 		if reasoningContent != "" {
-		    utils.GrayPrintf("%s", reasoningContent)
-		    reasoningBuilder.WriteString(reasoningContent)
+			utils.GrayPrintf("%s", reasoningContent)
+			reasoningBuilder.WriteString(reasoningContent)
 			hasReasoningOutput = true
 		}
 
 		if delta.Content != "" {
 			if hasReasoningOutput {
-        	    fmt.Printf("\n")
-           		hasReasoningOutput = false
-        	}
+				fmt.Printf("\n")
+				hasReasoningOutput = false
+			}
 			content := delta.Content
 			fmt.Print(content)
 			contentBuilder.WriteString(content)
